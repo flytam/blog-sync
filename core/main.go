@@ -3,9 +3,11 @@ package core
 import (
 	"blog-sync/log"
 	"blog-sync/util"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/flytam/filenamify"
 	"net/http"
 	"os"
 	"path"
@@ -47,6 +49,7 @@ func (core *Core) getArticle(articleList *[]*articleItem) {
 	client := http.Client{}
 
 	for index := 0; true; index++ {
+
 		resp, err := client.Get("https://blog.csdn.net/" + core.Csdn + "/article/list/" + strconv.Itoa(index))
 		if err != nil {
 			logger.Error(err.Error())
@@ -61,10 +64,10 @@ func (core *Core) getArticle(articleList *[]*articleItem) {
 				href, _ := selection.Find("a").Attr("href")
 
 				// 时间
-				// TODO 处理date的换行问题
 				date := selection.Find(".date").Text()
+				buf := []byte(date)
+				date = string(bytes.Trim(buf[1:], " "))
 
-				// fmt.Println(href, date)
 				// FindString
 				reg, _ := regexp.Compile(`(\d+)$`)
 
@@ -147,28 +150,29 @@ func (core *Core) Run() {
 	for _, article := range articleList {
 		go func(article *articleItem) {
 			// 文件
-			f, err := os.Create(path.Join(core.Output, article.title+".md"))
+			fileName, _ := filenamify.Filenamify(article.title+".md", filenamify.Options{})
+			f, err := os.Create(path.Join(core.Output, fileName))
 			if err != nil {
-				// TODO 处理非法文件名
-				logger.Error(err.Error())
-			} else {
-				f.WriteString(fmt.Sprintf("---\n"))
-				f.WriteString(fmt.Sprintf("title: %s\n", article.title))
-				f.WriteString(fmt.Sprintf("date: %s\n", article.date))
-				f.WriteString(fmt.Sprintf("tags: %s\n", strings.Join(article.tags, " ")))
-				f.WriteString(fmt.Sprintf("categories: %s\n", strings.Join(article.categories, " ")))
-				f.WriteString(fmt.Sprintf("---\n\n"))
-				f.WriteString(fmt.Sprintf("<!--more-->\n\n"))
-
-				if len(article.markdowncontent) > 0 {
-					f.WriteString(article.markdowncontent)
-				} else if len(article.content) > 0 {
-					f.WriteString(article.content)
-				}
-				defer f.Close()
-				logger.Info("生成完成：%s", article.title)
-
+				// 名字不符合要求的，使用id降级处理
+				fileName, _ = filenamify.Filenamify(article.id+".md", filenamify.Options{})
+				f, _ = os.Create(path.Join(core.Output, fileName))
+				logger.Error("降级处理: %s", article.title)
 			}
+			f.WriteString(fmt.Sprintf("---\n"))
+			f.WriteString(fmt.Sprintf("title: %s\n", article.title))
+			f.WriteString(fmt.Sprintf("date: %s\n", article.date))
+			f.WriteString(fmt.Sprintf("tags: %s\n", strings.Join(article.tags, " ")))
+			f.WriteString(fmt.Sprintf("categories: %s\n", strings.Join(article.categories, " ")))
+			f.WriteString(fmt.Sprintf("---\n\n"))
+			f.WriteString(fmt.Sprintf("<!--more-->\n\n"))
+
+			if len(article.markdowncontent) > 0 {
+				f.WriteString(article.markdowncontent)
+			} else if len(article.content) > 0 {
+				f.WriteString(article.content)
+			}
+			defer f.Close()
+			logger.Info("生成完成：%s", article.title)
 
 			wg.Done()
 		}(article)
