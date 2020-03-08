@@ -6,8 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/flytam/filenamify"
 	"net/http"
 	"os"
 	"path"
@@ -15,6 +13,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/flytam/filenamify"
 )
 
 type data struct {
@@ -27,9 +28,9 @@ type data struct {
 }
 
 type apiRes struct {
-	Status bool   `json:"status"`
+	Status int   `json:"code"`
 	Data   data   `json:"data"`
-	Error  string `json:"error"`
+	Msg  string `json:"msg"`
 }
 
 type articleItem struct {
@@ -88,7 +89,7 @@ func (core *Core) getArticle(articleList *[]*articleItem) {
 	for i := range *articleList {
 		go func(i int) {
 			// https://mp.csdn.net/mdeditor/getArticle?id
-			url := "https://mp.csdn.net/mdeditor/getArticle?id=" + (*articleList)[i].id
+			url := "https://blog-console-api.csdn.net/v1/editor/getArticle?id=" + (*articleList)[i].id
 			logger.Info("拉取url--%s", url)
 			req, err := http.NewRequest("GET", url, nil)
 			if err != nil {
@@ -103,7 +104,7 @@ func (core *Core) getArticle(articleList *[]*articleItem) {
 			var res apiRes
 			json.NewDecoder(resp.Body).Decode(&res)
 
-			if res.Status {
+			if res.Status == 200 {
 				d := &res.Data
 				(*articleList)[i].title = d.Title
 				(*articleList)[i].content = d.Content
@@ -111,7 +112,7 @@ func (core *Core) getArticle(articleList *[]*articleItem) {
 				(*articleList)[i].categories = strings.Split(d.Categories, ",")
 				(*articleList)[i].tags = strings.Split(d.Tags, ",")
 			} else {
-				logger.Error(res.Error)
+				logger.Error("%v",res.Msg)
 			}
 
 			defer wg.Done()
