@@ -1,3 +1,11 @@
+language: go
+
+go:
+  - 1.13.x
+env:
+  - GO111MODULE=on # 启用Go mod
+install:
+  - go get -v
 before_deploy: make build-all
 deploy:
   provider: releases
