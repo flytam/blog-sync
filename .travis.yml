@@ -11,7 +11,8 @@ deploy:
   provider: releases
   api_key:
     secure: AGaOPlUto4cwcG224bGey2tEpS1KAlcnVIoxp4gXRGFc+U4neNGfopJzvENbywhP7Qp/2i/e5gD0KYTrBtbQ2jx2D8tf6/nJFUtg6jUfZKBMInDGCLI9woqFvYkRD243f46rCUBuUVEQBOzP3LahPuxvhsK2j39sufGiKOtCaWVjIb8jJPBjGZlfyaHrAXKMit3eYHajtweK3px/+zCdhomwRFSduf1257jVfFgyh5iWbWAvlLL/GsHnibX7NEK6D9+p+NzCltnHREWIHsi11tv9GxZfaU8aM2GDk326fwSbPYh8pORvQqqqSFYw2DkBe8CHk59ucVfNmeWv7ClVaes3bRDyHP+1a61WW/uGSJeRAmOakFQAB5lKre+0i3sTqF5lD0ya1hj70El9avcrvepab62COkrBFTjPtTUX/GYcHE0ijXYhvAYZaG/iPkusf0u/frccu8IpWml5oJvmcEQEysUishhBGelGgrlByQCdlTaRPLgjNz10ciT8Ijrje93vBeHfpFoG0xFhqRj05l8uC7LnY5QJ1j1oW/qllowFaJsL4CwH948lHAzF2bkKoYryyIaoST5IvSq1WMZCc3pJo4Hbmu2rFoSl6AcLHaLrlyeIkbexKwDHelHBAENOf4a8hxs4AQ+FTtNSLDiha08c9ZFR7rVPg/sN0Key0Ko=
-  file: bin/blog-sync-linux bin/blog-sync-mac bin/blog-sync-win.exe
+  file_glob: true
+  file: bin/*
   skip_cleanup: true
   on:
     repo: flytam/blog-sync
